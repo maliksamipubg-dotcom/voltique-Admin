@@ -36,6 +36,38 @@ html, body{
   overflow-x: clip;
 }
 
+#root{
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+/* === Mobile Responsiveness / Overflow Safety ===
+   These rules only stop overflow and force text/images to wrap or shrink.
+   They do not change layout, spacing, colors, or any desktop appearance. */
+img{
+  max-width: 100%;
+}
+
+input, select, textarea{
+  max-width: 100%;
+}
+
+p, h1, h2, h3, h4, h5, h6, span, a, li, td, th, label, strong, em, small{
+  overflow-wrap: break-word;
+}
+
+pre{
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* Keep grid children from blowing out of their track on small screens */
+@media (max-width: 640px){
+  .grid > *{
+    min-width: 0;
+  }
+}
+
 button{
   touch-action: manipulation;
 }

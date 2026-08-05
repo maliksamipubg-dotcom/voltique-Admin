@@ -50,7 +50,7 @@ const ShoppingBagIcon = () => <Icon><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 
 const StatCard = ({ title, value, icon, iconBg, iconColor }) => (
   <div className='group bg-white rounded-2xl border border-slate-100 shadow-card p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card-hover'>
     <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 ${iconBg} ${iconColor}`}>{icon}</div>
-    <p className='text-2xl font-bold tracking-tight text-slate-800'>{value}</p>
+    <p className='text-2xl font-bold tracking-tight text-slate-800 break-words'>{value}</p>
     <p className='text-[13px] font-medium text-slate-500 mt-1'>{title}</p>
   </div>
 );
@@ -61,7 +61,7 @@ const SalesCard = ({ title, value, icon, iconBg, iconColor, trend }) => (
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${iconBg} ${iconColor}`}>{icon}</div>
       <p className='text-[13px] font-semibold text-slate-500'>{title}</p>
     </div>
-    <p className='text-2xl font-bold tracking-tight text-slate-800 mt-3'>{value}</p>
+    <p className='text-2xl font-bold tracking-tight text-slate-800 mt-3 break-words'>{value}</p>
     {trend !== null && trend !== undefined ? (
       <p className={`text-xs font-semibold mt-1.5 flex items-center gap-1 ${trend >= 0 ? 'text-green-600' : 'text-red-500'}`}>
         {trend >= 0 ? <ArrowUpRightIcon /> : <ArrowDownRightIcon />}

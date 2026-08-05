@@ -42,7 +42,7 @@ const StatCard = ({ label, value, icon, tone }) => {
     <div className={`border rounded-xl px-4 py-3.5 flex items-center gap-3 ${tones[tone] || tones.blue}`}>
       <span className='text-xl'>{icon}</span>
       <div className='min-w-0'>
-        <p className='text-lg font-bold leading-tight'>{value}</p>
+        <p className='text-lg font-bold leading-tight break-words'>{value}</p>
         <p className='text-[11px] font-medium opacity-80 truncate'>{label}</p>
       </div>
     </div>
@@ -291,10 +291,10 @@ const Orders = ({token}) => {
             <option value="custom">Custom Range</option>
           </select>
           {dateFilter === 'custom' && (
-            <div className='flex items-center gap-2'>
-              <input type="date" value={customFrom} onChange={(e)=>setCustomFrom(e.target.value)} className='px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-gray-700 outline-none' />
+            <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
+              <input type="date" value={customFrom} onChange={(e)=>setCustomFrom(e.target.value)} className='px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-gray-700 outline-none w-full sm:w-auto' />
               <span className='text-gray-400 text-sm'>to</span>
-              <input type="date" value={customTo} onChange={(e)=>setCustomTo(e.target.value)} className='px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-gray-700 outline-none' />
+              <input type="date" value={customTo} onChange={(e)=>setCustomTo(e.target.value)} className='px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-gray-700 outline-none w-full sm:w-auto' />
             </div>
           )}
           <select value={sortBy} onChange={(e)=>setSortBy(e.target.value)} className='px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-gray-700 outline-none'>

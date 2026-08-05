@@ -135,22 +135,22 @@ const Add = ({token}) => {
         <p className='mb-2'>Product Specifications</p>
         <div className='flex flex-col gap-2 max-w-[640px]'>
           {specs.map((spec, i) => (
-            <div key={i} className='flex items-center gap-2'>
+            <div key={i} className='flex flex-col sm:flex-row sm:items-center gap-2'>
               <input
                 onChange={(e)=>updateSpec(i, 'name', e.target.value)}
                 value={spec.name}
-                className='w-[200px] sm:w-[220px] px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary'
+                className='w-full sm:w-[220px] px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary'
                 type="text"
                 placeholder='Specification Name (e.g. Brand)'
               />
               <input
                 onChange={(e)=>updateSpec(i, 'value', e.target.value)}
                 value={spec.value}
-                className='flex-1 min-w-0 px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary'
+                className='w-full sm:flex-1 sm:min-w-0 px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary'
                 type="text"
                 placeholder='Specification Value'
               />
-              <button type="button" onClick={()=>removeSpec(i)} className='px-2 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0' title='Delete Specification' aria-label='Delete Specification'>
+              <button type="button" onClick={()=>removeSpec(i)} className='px-2 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0 self-start sm:self-auto' title='Delete Specification' aria-label='Delete Specification'>
                 <TrashIcon />
               </button>
             </div>
@@ -166,15 +166,15 @@ const Add = ({token}) => {
         <div className='flex flex-col gap-4 max-w-[640px]'>
           {options.map((option, oi) => (
             <div key={oi} className='border border-slate-300 rounded-lg p-3'>
-              <div className='flex items-center gap-2'>
+              <div className='flex flex-col sm:flex-row sm:items-center gap-2'>
                 <input
                   onChange={(e)=>updateOptionName(oi, e.target.value)}
                   value={option.name}
-                  className='w-[200px] sm:w-[240px] px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary'
+                  className='w-full sm:w-[240px] px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary'
                   type="text"
                   placeholder='Field Name (e.g. Ampere)'
                 />
-                <button type="button" onClick={()=>removeOption(oi)} className='px-2 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0' title='Delete Field' aria-label='Delete Field'>
+                <button type="button" onClick={()=>removeOption(oi)} className='px-2 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0 self-start sm:self-auto' title='Delete Field' aria-label='Delete Field'>
                   <TrashIcon />
                 </button>
               </div>

@@ -169,7 +169,7 @@ const Reviews = ({token}) => {
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input value={search} onChange={(e)=>setSearch(e.target.value)} onKeyDown={(e)=>{ if (e.key === 'Enter') fetchReviews() }} type="text" placeholder="Search customer, product, order..." className='outline-none text-sm text-gray-700 placeholder:text-gray-400 w-44' />
+            <input value={search} onChange={(e)=>setSearch(e.target.value)} onKeyDown={(e)=>{ if (e.key === 'Enter') fetchReviews() }} type="text" placeholder="Search customer, product, order..." className='outline-none text-sm text-gray-700 placeholder:text-gray-400 w-full sm:w-44' />
           </div>
           <select value={statusFilter} onChange={(e)=>{ setStatusFilter(e.target.value); }} className='px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white text-gray-700 outline-none'>
             <option value="">All Statuses</option>
