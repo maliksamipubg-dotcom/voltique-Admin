@@ -64,6 +64,8 @@ const Orders = ({token}) => {
   const [deleteTarget,setDeleteTarget] = useState(null)
   const [deleting,setDeleting] = useState(false)
   const [downloadingId,setDownloadingId] = useState(null)
+  const [advanceDrafts,setAdvanceDrafts] = useState({})
+  const [savingAdvanceId,setSavingAdvanceId] = useState(null)
 
   const fetchAllOrders = async ()=>{
     if (!token) return null
@@ -199,6 +201,27 @@ const Orders = ({token}) => {
   const copyOrderId = (orderId) => {
     navigator.clipboard?.writeText(orderId)
     toast.success('Order ID copied')
+  }
+
+  const saveAdvancePayment = async (order) => {
+    const value = Number(advanceDrafts[order._id])
+    const advance = Number.isFinite(value) && value > 0 ? value : 0
+    setSavingAdvanceId(order._id)
+    try {
+      const response = await axios.post(backendUrl + '/api/order/advance-payment', { orderId: order._id, advancePayment: advance }, { headers: { token } })
+      if (response.data.success) {
+        toast.success('Advance payment saved')
+        setAdvanceDrafts((d) => { const n = { ...d }; delete n[order._id]; return n })
+        await fetchAllOrders()
+      } else {
+        toast.error(response.data.message)
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error(error.message)
+    } finally {
+      setSavingAdvanceId(null)
+    }
   }
 
   const downloadInvoice = async (order) => {
@@ -376,6 +399,32 @@ const Orders = ({token}) => {
                     <p className='text-sm text-gray-700'>Method: {order.paymentMethod}</p>
                     <p className='text-sm text-gray-700'>Status: <span className={`font-semibold ${order.payment ? 'text-green-600' : 'text-amber-600'}`}>{order.payment ? 'Paid' : 'Pending'}</span></p>
                     <p className='text-sm text-gray-700'>Est. Delivery: {new Date(order.estimatedDelivery).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1'>Advance Payment</p>
+                    <div className='flex items-center gap-2'>
+                      <div className='flex items-center border border-gray-300 rounded-md focus-within:border-primary overflow-hidden shrink-0'>
+                        <span className='pl-2 text-sm text-gray-500'>{currency}</span>
+                        <input
+                          type='number'
+                          min='0'
+                          step='any'
+                          value={advanceDrafts[order._id] ?? (order.advancePayment || 0)}
+                          onChange={(e) => setAdvanceDrafts((d) => ({ ...d, [order._id]: e.target.value }))}
+                          disabled={savingAdvanceId === order._id}
+                          placeholder='0'
+                          className='w-20 p-2 text-sm text-gray-700 outline-none bg-transparent disabled:opacity-60'
+                        />
+                      </div>
+                      <button
+                        onClick={() => saveAdvancePayment(order)}
+                        disabled={savingAdvanceId === order._id}
+                        className='flex-1 px-3 py-2 text-xs font-semibold bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors disabled:opacity-60 whitespace-nowrap'
+                      >
+                        {savingAdvanceId === order._id ? 'Saving...' : 'Save Advance Payment'}
+                      </button>
+                    </div>
+                    <p className='text-xs text-gray-400 mt-1'>Remaining: {currency} {Math.max(0, (order.amount || 0) - Number(advanceDrafts[order._id] ?? (order.advancePayment || 0))).toLocaleString()}</p>
                   </div>
                   {order.status === 'Cancelled' && (
                     <div className='bg-red-50 border border-red-100 rounded-lg p-3'>
