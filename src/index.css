@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #2456e6;
+  --primary-dark: #1a3fae;
+  --accent-color: #059669;
+  --dark-color: #0a1628;
+  --bg-color: #f4f6fa;
+  --card-color: #ffffff;
+  --border-color: #e2e8f0;
+  --muted-color: #52607a;
+}
+
+*{
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .heading-font{
+  font-family: "Space Grotesk", sans-serif;
+}
+
+select,input,textarea{
+  border: 1px solid #cbd5e1;
+  outline-color: #2456e6;
+  border-radius: 6px;
+
+}
+
+html, body{
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+button{
+  touch-action: manipulation;
+}
+
+.active{
+  background-color: #eef2ff;
+  border-color: #2456e6;
+}
+
+/* Modern Toast Styling */
+.Toastify__toast{
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -8px rgba(2, 6, 23, 0.25);
+  padding: 12px 16px;
+  font-family: "Inter", sans-serif;
+}
+
+.Toastify__toast-body{
+  font-size: 14px;
+  font-weight: 500;
+  align-items: center;
+  gap: 8px;
+}
+
+.Toastify__toast .Toastify__close-button{
+  align-self: center;
+  opacity: 0.7;
+}
+
+.Toastify__toast .Toastify__close-button:hover{
+  opacity: 1;
+}
+
+.Toastify__toast .Toastify__progress-bar{
+  height: 3px;
+  border-radius: 9999px;
+}
+
+@media (max-width: 480px){
+  .Toastify__toast-container{
+    width: calc(100vw - 32px);
+    max-width: 100%;
+    margin: 0 16px;
+    right: 0;
+    left: 0;
+  }
+}
+
+.brand-logo{
+  display: block;
+  width: auto;
+  height: 40px;
+  max-width: 100%;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+@media (min-width: 768px){
+  .brand-logo{
+    height: 46px;
+  }
+}
+
+@media (min-width: 992px){
+  .brand-logo{
+    height: 52px;
+  }
+}
+
+@media (min-width: 1200px){
+  .brand-logo{
+    height: 56px;
+  }
+}

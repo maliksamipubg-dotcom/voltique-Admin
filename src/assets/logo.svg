@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="56" viewBox="0 0 250 56" fill="none">
+  <defs>
+    <linearGradient id="vqg" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2456E6"/>
+      <stop offset="1" stop-color="#0EA5E9"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="6" width="44" height="44" rx="13" fill="url(#vqg)"/>
+  <rect x="3" y="7" width="42" height="42" rx="12" fill="none" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="1.5"/>
+  <path transform="translate(2,6) scale(1.1)" d="M21 7 L11 21 h6.5 L17.5 33 L30 16.5 h-6.5 L21 7 Z" fill="#FFFFFF"/>
+  <text x="56" y="38" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-0.5">
+    <tspan fill="#0B1220">Voltique</tspan><tspan fill="#2456E6"> Hub</tspan>
+  </text>
+</svg>
