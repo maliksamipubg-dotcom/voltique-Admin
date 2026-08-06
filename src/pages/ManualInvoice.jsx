@@ -22,10 +22,12 @@ const ManualInvoice = ({token}) => {
   const [productsLoading,setProductsLoading] = useState(true)
   const [search,setSearch] = useState('')
 
-  const [customer,setCustomer] = useState({ name:'', phone:'', email:'', address:'' })
+  const [customer,setCustomer] = useState({ name:'', phone:'', email:'', address:'', city:'', state:'', postalCode:'', country:'' })
   const [items,setItems] = useState([])
+  const [paymentMethod,setPaymentMethod] = useState('COD')
   const [discount,setDiscount] = useState('')
   const [advancePayment,setAdvancePayment] = useState('')
+  const [shippingCharges,setShippingCharges] = useState('')
   const [notes,setNotes] = useState('')
   const [generating,setGenerating] = useState(false)
 
@@ -85,9 +87,10 @@ const ManualInvoice = ({token}) => {
   }
 
   const subtotal = items.reduce((sum, it) => sum + (it.price || 0) * (it.quantity || 1), 0)
+  const shipping = Number(shippingCharges) || 0
   const disc = Number(discount) || 0
   const adv = Number(advancePayment) || 0
-  const grandTotal = Math.max(0, subtotal - disc)
+  const grandTotal = Math.max(0, subtotal + shipping - disc)
   const remainingBalance = Math.max(0, grandTotal - adv)
 
   const downloadPdf = async (invoice, autoName) => {
@@ -123,10 +126,12 @@ const ManualInvoice = ({token}) => {
   }
 
   const resetForm = () => {
-    setCustomer({ name:'', phone:'', email:'', address:'' })
+    setCustomer({ name:'', phone:'', email:'', address:'', city:'', state:'', postalCode:'', country:'' })
     setItems([])
+    setPaymentMethod('COD')
     setDiscount('')
     setAdvancePayment('')
+    setShippingCharges('')
     setNotes('')
     setSearch('')
   }
@@ -142,8 +147,10 @@ const ManualInvoice = ({token}) => {
       const response = await axios.post(backendUrl + '/api/manual-invoice/create', {
         customer,
         items,
+        paymentMethod,
         discount: disc,
         advancePayment: adv,
+        shippingCharges: shipping,
         notes,
       }, { headers: { token } })
 
@@ -199,12 +206,45 @@ const ManualInvoice = ({token}) => {
                 <p className='mb-1.5 text-sm text-gray-600'>Address <span className='text-red-500'>*</span></p>
                 <input value={customer.address} onChange={(e)=>setCustomer({ ...customer, address: e.target.value })} className={inputClass} type="text" placeholder='e.g. House # 12, Street 5, Gulberg, Lahore' />
               </div>
+              <div>
+                <p className='mb-1.5 text-sm text-gray-600'>City <span className='text-gray-400'>(Optional)</span></p>
+                <input value={customer.city} onChange={(e)=>setCustomer({ ...customer, city: e.target.value })} className={inputClass} type="text" placeholder='e.g. Karachi' />
+              </div>
+              <div>
+                <p className='mb-1.5 text-sm text-gray-600'>State / Province <span className='text-gray-400'>(Optional)</span></p>
+                <input value={customer.state} onChange={(e)=>setCustomer({ ...customer, state: e.target.value })} className={inputClass} type="text" placeholder='e.g. Sindh' />
+              </div>
+              <div>
+                <p className='mb-1.5 text-sm text-gray-600'>Postal Code <span className='text-gray-400'>(Optional)</span></p>
+                <input value={customer.postalCode} onChange={(e)=>setCustomer({ ...customer, postalCode: e.target.value })} className={inputClass} type="text" placeholder='e.g. 75500' />
+              </div>
+              <div>
+                <p className='mb-1.5 text-sm text-gray-600'>Country <span className='text-gray-400'>(Optional)</span></p>
+                <input value={customer.country} onChange={(e)=>setCustomer({ ...customer, country: e.target.value })} className={inputClass} type="text" placeholder='e.g. Pakistan' />
+              </div>
+            </div>
+          </div>
+
+          <div className='bg-white rounded-xl border border-slate-200 shadow-sm p-5'>
+            <p className='text-sm font-semibold text-gray-800 mb-4'>Payment Method</p>
+            <div>
+              <select value={paymentMethod} onChange={(e)=>setPaymentMethod(e.target.value)} className={inputClass}>
+                <option value="COD">Cash on Delivery (COD)</option>
+                <option value="Online Payment">Online Payment</option>
+              </select>
             </div>
           </div>
 
           <div className='bg-white rounded-xl border border-slate-200 shadow-sm p-5'>
             <p className='text-sm font-semibold text-gray-800 mb-4'>Additional Fields <span className='text-xs font-normal text-gray-400'>(Optional)</span></p>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+              <div>
+                <p className='mb-1.5 text-sm text-gray-600'>Shipping Charges <span className='text-gray-400'>(Optional)</span></p>
+                <div className='flex items-center border border-slate-300 rounded-lg overflow-hidden focus-within:border-primary bg-white'>
+                  <span className='pl-3 text-sm text-gray-500'>{currency}</span>
+                  <input value={shippingCharges} onChange={(e)=>setShippingCharges(e.target.value)} className='w-full px-3 py-2 outline-none text-sm bg-transparent' type="number" min="0" step="any" placeholder='0' />
+                </div>
+              </div>
               <div>
                 <p className='mb-1.5 text-sm text-gray-600'>Discount</p>
                 <div className='flex items-center border border-slate-300 rounded-lg overflow-hidden focus-within:border-primary bg-white'>
@@ -339,6 +379,10 @@ const ManualInvoice = ({token}) => {
             <div className='flex justify-between gap-8'>
               <span className='text-gray-500'>Subtotal</span>
               <span className='font-semibold text-gray-800'>{currency} {subtotal.toLocaleString()}</span>
+            </div>
+            <div className='flex justify-between gap-8'>
+              <span className='text-gray-500'>Shipping Charges</span>
+              <span className='font-semibold text-gray-800'>{currency} {shipping.toLocaleString()}</span>
             </div>
             <div className='flex justify-between gap-8'>
               <span className='text-gray-500'>Discount</span>
