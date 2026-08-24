@@ -32,6 +32,7 @@ const Add = ({token}) => {
   const [featured,setFeatured] = useState(draft.featured || false);
   const [specs,setSpecs] = useState(draft.specs || []);
   const [options,setOptions] = useState(draft.options || []);
+  const [warranty,setWarranty] = useState(draft.warranty || "");
   const skipFirstSave = useRef(true);
 
   useEffect(() => {
@@ -39,8 +40,8 @@ const Add = ({token}) => {
       skipFirstSave.current = false;
       return;
     }
-    saveAddForm({ images, name, description, price, category, bestseller, featured, specs, options });
-  }, [images, name, description, price, category, bestseller, featured, specs, options]);
+    saveAddForm({ images, name, description, price, category, bestseller, featured, specs, options, warranty });
+  }, [images, name, description, price, category, bestseller, featured, specs, options, warranty]);
 
   const addSpec = () => setSpecs(prev => [...prev, { name: '', value: '' }]);
   const removeSpec = (index) => setSpecs(prev => prev.filter((_, i) => i !== index));
@@ -64,6 +65,7 @@ const Add = ({token}) => {
     setFeatured(false);
     setSpecs([]);
     setOptions([]);
+    setWarranty('');
   };
 
   const onSubmitHandler = async (e) => {
@@ -98,6 +100,7 @@ const Add = ({token}) => {
       formData.append("featured",featured)
       formData.append("stock",stock)
       formData.append("sizes",JSON.stringify(amperes))
+      formData.append("warranty",warranty)
       formData.append("options",JSON.stringify(options
         .map(o => ({ name: o.name.trim(), values: o.values.map(v => v.trim()).filter(Boolean) }))
         .filter(o => o.name && o.values.length > 0)))
@@ -210,6 +213,17 @@ const Add = ({token}) => {
         <div>
           <p className='mb-2'>Product Price</p>
           <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" required />
+        </div>
+        <div>
+          <p className='mb-2'>Product Warranty <span className='text-xs font-normal text-gray-400'>(Used on warranty cards)</span></p>
+          <input onChange={(e)=>setWarranty(e.target.value)} value={warranty} className='w-full px-3 py-2 sm:w-[180px]' type="text" placeholder='e.g. 3 Months, 1 Year, No Warranty' list="warranty-suggestions" />
+          <datalist id="warranty-suggestions">
+            <option value="No Warranty" />
+            <option value="3 Months" />
+            <option value="6 Months" />
+            <option value="1 Year" />
+            <option value="2 Years" />
+          </datalist>
         </div>
       </div>
       <div className='flex gap-6 mt-2'>

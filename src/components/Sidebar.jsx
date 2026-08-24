@@ -56,6 +56,21 @@ const Sidebar = ({open,onClose}) => {
                     </svg>
                     <p className={labelClass}>Invoice History</p>
                 </NavLink>
+                <NavLink onClick={onClose} className={itemClass} to="/warranty-card">
+                    <svg className='w-5 h-5 shrink-0' viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#4B5563' }}>
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <polyline points="9 12 11 14 15 10" />
+                    </svg>
+                    <p className={labelClass}>Warranty Card</p>
+                </NavLink>
+                <NavLink onClick={onClose} className={itemClass} to="/warranty-history">
+                    <svg className='w-5 h-5 shrink-0' viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#4B5563' }}>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <path d="M9.5 13.5 11.5 15.5 15 11.5" />
+                    </svg>
+                    <p className={labelClass}>Warranty History</p>
+                </NavLink>
             </div>
         </div>
     </div>

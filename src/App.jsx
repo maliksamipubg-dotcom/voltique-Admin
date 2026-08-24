@@ -11,6 +11,8 @@ import Reviews from './pages/Reviews'
 import Categories from './pages/Categories'
 import ManualInvoice from './pages/ManualInvoice'
 import ManualInvoiceHistory from './pages/ManualInvoiceHistory'
+import WarrantyCard from './pages/WarrantyCard'
+import WarrantyHistory from './pages/WarrantyHistory'
 import Login from './components/Login'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -59,6 +61,8 @@ const App = () => {
                 <Route path='/categories' element={<Categories />} />
                 <Route path='/manual-invoice' element={<ManualInvoice token={token} />} />
                 <Route path='/manual-invoice-history' element={<ManualInvoiceHistory token={token} />} />
+                <Route path='/warranty-card' element={<WarrantyCard token={token} />} />
+                <Route path='/warranty-history' element={<WarrantyHistory token={token} />} />
               </Routes>
             </div>
           </div>

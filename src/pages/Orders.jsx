@@ -4,6 +4,7 @@ import { useState } from 'react'
 import axios from 'axios'
 import { backendUrl, currency } from '../App'
 import {toast} from 'react-toastify'
+import { fmtLongDate } from '../utils/warranty'
 
 const statusList = ['Order Placed', 'Order Confirmed', 'Processing', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'];
 
@@ -66,6 +67,9 @@ const Orders = ({token}) => {
   const [downloadingId,setDownloadingId] = useState(null)
   const [advanceDrafts,setAdvanceDrafts] = useState({})
   const [savingAdvanceId,setSavingAdvanceId] = useState(null)
+  const [warrantyCards,setWarrantyCards] = useState([])
+  const [downloadingWarrantyId,setDownloadingWarrantyId] = useState(null)
+  const [viewWarrantyCards,setViewWarrantyCards] = useState([])
 
   const fetchAllOrders = async ()=>{
     if (!token) return null
@@ -81,6 +85,17 @@ const Orders = ({token}) => {
       toast.error(error.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Warranty cards linked to orders (used for the per-order warranty button
+  // and the details modal). Fetched separately so order loading stays intact.
+  const fetchWarrantyCards = async () => {
+    try {
+      const response = await axios.post(backendUrl + '/api/warranty/list', {}, { headers: { token } })
+      if (response.data.success) setWarrantyCards(response.data.cards)
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -126,7 +141,15 @@ const Orders = ({token}) => {
 
   useEffect(()=>{
     fetchAllOrders();
+    fetchWarrantyCards();
   },[token])
+
+  const warrantyByOrder = {}
+  for (const card of warrantyCards) {
+    if (!card.orderId) continue
+    if (!warrantyByOrder[card.orderId]) warrantyByOrder[card.orderId] = []
+    warrantyByOrder[card.orderId].push(card)
+  }
 
   const now = new Date();
   const today = startOfDay(now);
@@ -263,6 +286,112 @@ const Orders = ({token}) => {
       toast.error(error.response?.data?.message || error.message || 'Failed to download invoice')
     } finally {
       setDownloadingId(null)
+    }
+  }
+
+  // Downloads the combined warranty card PDF for an order. The backend makes
+  // sure cards exist first (one per warranted product), so this works even if
+  // automatic generation was interrupted when the order was placed.
+  const downloadOrderWarranty = async (order) => {
+    if (downloadingWarrantyId) return
+    setDownloadingWarrantyId(order._id)
+    try {
+      const response = await axios.post(backendUrl + '/api/warranty/order-pdf', { orderId: order._id }, { headers: { token }, responseType: 'blob' })
+      const contentType = response.headers?.['content-type'] || ''
+      let isPdf = contentType.includes('application/pdf')
+      if (!isPdf && typeof response.data.arrayBuffer === 'function') {
+        const head = new Uint8Array(await response.data.arrayBuffer()).slice(0, 4)
+        isPdf = String.fromCharCode(...head) === '%PDF'
+      }
+      if (!isPdf) {
+        let message = 'No warranty card available'
+        try {
+          const parsed = JSON.parse(await response.data.text())
+          message = parsed.message || message
+        } catch (parseErr) {
+          console.log(parseErr)
+        }
+        toast.error(message)
+        return
+      }
+      const disposition = response.headers?.['content-disposition'] || ''
+      const match = /filename="?([^"]+)"?/.exec(disposition)
+      const fileName = match ? match[1] : `Warranty-${order.orderId}.pdf`
+      const url = window.URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Warranty card downloaded')
+      fetchWarrantyCards()
+    } catch (error) {
+      console.log(error)
+      toast.error(error.response?.data?.message || error.message || 'Failed to download warranty card')
+    } finally {
+      setDownloadingWarrantyId(null)
+    }
+  }
+
+  // Opens the details modal and lazily backfills warranty cards for the order
+  // (never creates duplicates — the backend skips existing cards).
+  const openDetails = async (order) => {
+    setViewOrder(order)
+    setViewWarrantyCards(warrantyByOrder[order._id] || [])
+    try {
+      const response = await axios.post(backendUrl + '/api/warranty/order', { orderId: order._id }, { headers: { token } })
+      if (response.data.success && Array.isArray(response.data.cards)) {
+        setViewWarrantyCards(response.data.cards)
+        if (response.data.cards.length > 0 && (warrantyByOrder[order._id] || []).length === 0) {
+          fetchWarrantyCards()
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const downloadSingleWarranty = async (card) => {
+    if (downloadingWarrantyId) return
+    setDownloadingWarrantyId(card._id)
+    try {
+      const response = await axios.post(backendUrl + '/api/warranty/pdf', { cardId: card._id }, { headers: { token }, responseType: 'blob' })
+      const contentType = response.headers?.['content-type'] || ''
+      let isPdf = contentType.includes('application/pdf')
+      if (!isPdf && typeof response.data.arrayBuffer === 'function') {
+        const head = new Uint8Array(await response.data.arrayBuffer()).slice(0, 4)
+        isPdf = String.fromCharCode(...head) === '%PDF'
+      }
+      if (!isPdf) {
+        let message = 'No warranty card available'
+        try {
+          const parsed = JSON.parse(await response.data.text())
+          message = parsed.message || message
+        } catch (parseErr) {
+          console.log(parseErr)
+        }
+        toast.error(message)
+        return
+      }
+      const disposition = response.headers?.['content-disposition'] || ''
+      const match = /filename="?([^"]+)"?/.exec(disposition)
+      const fileName = match ? match[1] : `Warranty-${card.cardNumber}.pdf`
+      const url = window.URL.createObjectURL(response.data)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Warranty card downloaded')
+    } catch (error) {
+      console.log(error)
+      toast.error(error.response?.data?.message || error.message || 'Failed to download warranty card')
+    } finally {
+      setDownloadingWarrantyId(null)
     }
   }
 
@@ -443,8 +572,7 @@ const Orders = ({token}) => {
                       >
                         {statusList.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
-                      <button onClick={() => setViewOrder(order)} className='px-3 py-2 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors shrink-0'>Details</button>
-                      <button onClick={() => setDeleteTarget(order)} className='px-3 py-2 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors shrink-0'>Delete</button>
+                      <button onClick={() => openDetails(order)} className='px-3 py-2 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors shrink-0'>Details</button>                      <button onClick={() => setDeleteTarget(order)} className='px-3 py-2 text-xs font-semibold bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors shrink-0'>Delete</button>
                     </div>
                     <button
                       onClick={() => downloadInvoice(order)}
@@ -459,6 +587,22 @@ const Orders = ({token}) => {
                       </svg>
                       {downloadingId === order._id ? 'Generating...' : 'Download Invoice'}
                     </button>
+                    {order.status !== 'Cancelled' && (
+                      <button
+                        onClick={() => downloadOrderWarranty(order)}
+                        disabled={downloadingWarrantyId !== null}
+                        title='Download Warranty Card (PDF)'
+                        className='w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shrink-0'
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className='shrink-0'>
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          <polyline points="9 12 11 14 15 10" />
+                        </svg>
+                        {downloadingWarrantyId === order._id
+                          ? 'Generating...'
+                          : `Download Warranty Card${(warrantyByOrder[order._id]?.length || 0) > 0 ? ` (${warrantyByOrder[order._id].length})` : ''}`}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -533,6 +677,48 @@ const Orders = ({token}) => {
                   <p className='text-xl font-bold text-primary'>{currency} {viewOrder.amount}</p>
                 </div>
               </div>
+
+              {/* Warranty cards linked to this order */}
+              {!['Cancelled'].includes(viewOrder.status) && (
+                <div>
+                  <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2'>Warranty Cards</p>
+                  {viewWarrantyCards.length === 0 ? (
+                    <p className='text-sm text-gray-400 border border-dashed border-slate-200 rounded-lg p-3'>
+                      No warranty cards for this order (no products with warranty).
+                    </p>
+                  ) : (
+                    <div className='flex flex-col gap-2'>
+                      {viewWarrantyCards.map((card) => (
+                        <div key={card._id} className='flex items-center gap-3 border border-slate-100 rounded-lg p-2.5'>
+                          {card.product?.image && card.product.image[0] && (
+                            <img src={card.product.image[0]} alt="" className='w-10 h-auto object-contain rounded-lg border border-slate-200 bg-white shrink-0' />
+                          )}
+                          <div className='min-w-0 flex-1'>
+                            <p className='text-sm font-medium text-gray-800 leading-snug line-clamp-1'>{card.product?.name}</p>
+                            <p className='text-xs text-gray-400'>
+                              #{card.cardNumber} · {card.warranty?.periodLabel}
+                            </p>
+                            {card.warranty?.hasWarranty && (
+                              <p className='text-[11px] text-gray-400'>{fmtLongDate(card.startDate)} → {fmtLongDate(card.expiryDate)}</p>
+                            )}
+                          </div>
+                          <span className={`shrink-0 text-[11px] font-semibold px-2 py-1 rounded-full ${card.source === 'Automatic Order' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                            {card.source === 'Automatic Order' ? 'Automatic Order' : 'Manual'}
+                          </span>
+                          <button
+                            onClick={() => downloadSingleWarranty(card)}
+                            disabled={downloadingWarrantyId !== null}
+                            title='Download Warranty Card (PDF)'
+                            className='shrink-0 px-2.5 py-1.5 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-60'
+                          >
+                            {downloadingWarrantyId === card._id ? '...' : 'PDF'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {viewOrder.status === 'Cancelled' && (
                 <div className='bg-red-50 border border-red-100 rounded-lg p-4'>

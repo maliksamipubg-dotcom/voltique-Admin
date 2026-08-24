@@ -29,6 +29,7 @@ const Edit = ({token}) => {
   const [stock, setStock] = useState("In Stock");
   const [specs, setSpecs] = useState([]);
   const [options, setOptions] = useState([]);
+  const [warranty, setWarranty] = useState("");
 
   const addSpec = () => setSpecs(prev => [...prev, { name: '', value: '' }]);
   const removeSpec = (index) => setSpecs(prev => prev.filter((_, i) => i !== index));
@@ -52,6 +53,7 @@ const Edit = ({token}) => {
           parsedSpecs.forEach(s => { specMap[s.name.trim().toLowerCase()] = s.value.trim(); });
           setSpecs(parsedSpecs);
           setStock(product.stock || specMap['stock'] || 'In Stock');
+          setWarranty(product.warranty || specMap['warranty'] || '');
           let baseName = product.name;
           const brand = product.subCategory || specMap['brand'] || '';
           if (brand && baseName.startsWith(brand)) {
@@ -110,6 +112,7 @@ const Edit = ({token}) => {
       formData.append("bestseller", bestseller)
       formData.append("featured", featured)
       formData.append("stock", stockValue)
+      formData.append("warranty", warranty)
       formData.append("sizes", JSON.stringify(amperes))
       formData.append("options", JSON.stringify(options
         .map(o => ({ name: o.name.trim(), values: o.values.map(v => v.trim()).filter(Boolean) }))
@@ -238,6 +241,17 @@ const Edit = ({token}) => {
         <div>
           <p className='mb-2'>Product Price</p>
           <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" required />
+        </div>
+        <div>
+          <p className='mb-2'>Product Warranty <span className='text-xs font-normal text-gray-400'>(Used on warranty cards)</span></p>
+          <input onChange={(e)=>setWarranty(e.target.value)} value={warranty} className='w-full px-3 py-2 sm:w-[180px]' type="text" placeholder='e.g. 3 Months, 1 Year, No Warranty' list="warranty-suggestions-edit" />
+          <datalist id="warranty-suggestions-edit">
+            <option value="No Warranty" />
+            <option value="3 Months" />
+            <option value="6 Months" />
+            <option value="1 Year" />
+            <option value="2 Years" />
+          </datalist>
         </div>
       </div>
 
