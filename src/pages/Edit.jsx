@@ -23,6 +23,7 @@ const Edit = ({token}) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [discountAmount, setDiscountAmount] = useState("");
   const [category, setCategory] = useState("Battery Chargers");
   const [bestseller, setBestseller] = useState(false);
   const [featured, setFeatured] = useState(false);
@@ -62,6 +63,7 @@ const Edit = ({token}) => {
           setName(baseName);
           setDescription(rest);
           setPrice(product.price);
+          setDiscountAmount(product.discountAmount || 0);
           setCategory(product.category);
           setFeatured(!!product.featured);
           setBestseller(!!product.bestseller);
@@ -107,6 +109,7 @@ const Edit = ({token}) => {
       formData.append("name", finalName)
       formData.append("description", finalDescription)
       formData.append("price", price)
+      formData.append("discountAmount", discountAmount || 0)
       formData.append("category", category)
       formData.append("subCategory", brand || "Voltique Hub")
       formData.append("bestseller", bestseller)
@@ -240,7 +243,15 @@ const Edit = ({token}) => {
         <CategoryManager value={category} onChange={setCategory} />
         <div>
           <p className='mb-2'>Product Price</p>
-          <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" required />
+          <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" min="0" required />
+        </div>
+        <div>
+          <p className='mb-2'>Discount Amount (Rs.)</p>
+          <input onChange={(e)=>setDiscountAmount(e.target.value)} value={discountAmount} className='w-full px-3 py-2 sm:w-[140px]' type="Number" min="0" placeholder="e.g. 1000" />
+          <p className='text-xs text-gray-500 mt-1 max-w-[180px]'>Original price will be calculated automatically. Leave 0 or empty if no discount.</p>
+          {price && discountAmount && Number(discountAmount) > 0 ? (
+            <p className='text-xs text-gray-600 mt-1'>Original Price: Rs. {Number(price) + Number(discountAmount)}</p>
+          ) : null}
         </div>
         <div>
           <p className='mb-2'>Product Warranty <span className='text-xs font-normal text-gray-400'>(Used on warranty cards)</span></p>

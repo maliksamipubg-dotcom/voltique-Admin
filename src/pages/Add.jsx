@@ -27,6 +27,7 @@ const Add = ({token}) => {
   const [name,setName] = useState(draft.name || "");
   const [description,setDescription] = useState(draft.description || "");
   const [price,setPrice] = useState(draft.price || "");
+  const [discountAmount,setDiscountAmount] = useState(draft.discountAmount || "");
   const [category,setCategory] = useState(draft.category || DEFAULT_CATEGORY);
   const [bestseller,setBestseller] = useState(draft.bestseller || false);
   const [featured,setFeatured] = useState(draft.featured || false);
@@ -40,8 +41,8 @@ const Add = ({token}) => {
       skipFirstSave.current = false;
       return;
     }
-    saveAddForm({ images, name, description, price, category, bestseller, featured, specs, options, warranty });
-  }, [images, name, description, price, category, bestseller, featured, specs, options, warranty]);
+    saveAddForm({ images, name, description, price, discountAmount, category, bestseller, featured, specs, options, warranty });
+  }, [images, name, description, price, discountAmount, category, bestseller, featured, specs, options, warranty]);
 
   const addSpec = () => setSpecs(prev => [...prev, { name: '', value: '' }]);
   const removeSpec = (index) => setSpecs(prev => prev.filter((_, i) => i !== index));
@@ -60,6 +61,7 @@ const Add = ({token}) => {
     setName('');
     setDescription('');
     setPrice('');
+    setDiscountAmount('');
     setCategory(DEFAULT_CATEGORY);
     setBestseller(false);
     setFeatured(false);
@@ -94,6 +96,9 @@ const Add = ({token}) => {
       formData.append("name",finalName)
       formData.append("description",finalDescription)
       formData.append("price",price)
+      if (discountAmount !== '' && discountAmount !== null && discountAmount !== undefined) {
+        formData.append("discountAmount", discountAmount)
+      }
       formData.append("category",category)
       formData.append("subCategory",brand || "Voltique Hub")
       formData.append("bestseller",bestseller)
@@ -212,7 +217,15 @@ const Add = ({token}) => {
         <CategoryManager value={category} onChange={setCategory} />
         <div>
           <p className='mb-2'>Product Price</p>
-          <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" required />
+          <input onChange={(e)=>setPrice(e.target.value)} value={price} className='w-full px-3 py-2 sm:w-[120px]' type="Number" min="0" required />
+        </div>
+        <div>
+          <p className='mb-2'>Discount Amount (Rs.)</p>
+          <input onChange={(e)=>setDiscountAmount(e.target.value)} value={discountAmount} className='w-full px-3 py-2 sm:w-[140px]' type="Number" min="0" placeholder="e.g. 1000" />
+          <p className='text-xs text-gray-500 mt-1 max-w-[180px]'>Original price will be calculated automatically. Leave 0 or empty if no discount.</p>
+          {price && discountAmount && Number(discountAmount) > 0 ? (
+            <p className='text-xs text-gray-600 mt-1'>Original Price: Rs. {Number(price) + Number(discountAmount)}</p>
+          ) : null}
         </div>
         <div>
           <p className='mb-2'>Product Warranty <span className='text-xs font-normal text-gray-400'>(Used on warranty cards)</span></p>
