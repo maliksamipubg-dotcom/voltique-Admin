@@ -31,6 +31,7 @@ const Edit = ({token}) => {
   const [specs, setSpecs] = useState([]);
   const [options, setOptions] = useState([]);
   const [warranty, setWarranty] = useState("");
+  const [soldCount, setSoldCount] = useState("");
 
   const addSpec = () => setSpecs(prev => [...prev, { name: '', value: '' }]);
   const removeSpec = (index) => setSpecs(prev => prev.filter((_, i) => i !== index));
@@ -67,6 +68,7 @@ const Edit = ({token}) => {
           setCategory(product.category);
           setFeatured(!!product.featured);
           setBestseller(!!product.bestseller);
+          setSoldCount(product.soldCount || '');
           setImages((product.image || []).map((url, idx) => ({ key: 'existing-' + url + '-' + idx, src: url, file: null, isExisting: true })));
           setOptions(Array.isArray(product.options) ? product.options.map(o => ({ name: o.name || '', values: Array.isArray(o.values) ? [...o.values] : [] })) : []);
         } else {
@@ -116,6 +118,7 @@ const Edit = ({token}) => {
       formData.append("featured", featured)
       formData.append("stock", stockValue)
       formData.append("warranty", warranty)
+      formData.append("soldCount", soldCount)
       formData.append("sizes", JSON.stringify(amperes))
       formData.append("options", JSON.stringify(options
         .map(o => ({ name: o.name.trim(), values: o.values.map(v => v.trim()).filter(Boolean) }))
@@ -263,6 +266,11 @@ const Edit = ({token}) => {
             <option value="1 Year" />
             <option value="2 Years" />
           </datalist>
+        </div>
+        <div>
+          <p className='mb-2'>Sold Count <span className='text-xs font-normal text-gray-400'>(display only)</span></p>
+          <input onChange={(e)=>setSoldCount(e.target.value)} value={soldCount} className='w-full px-3 py-2 sm:w-[120px]' type="Number" min="0" placeholder="e.g. 60" />
+          <p className='text-xs text-gray-500 mt-1 max-w-[180px]'>Shown as "60 Sold" on the shop and product pages. Leave 0 or empty to hide.</p>
         </div>
       </div>
 

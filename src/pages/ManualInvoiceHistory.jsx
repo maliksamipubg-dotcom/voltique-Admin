@@ -25,6 +25,74 @@ const TrashIcon = () => (
   </svg>
 )
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
+const startOfDay = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+const startOfWeek = (date) => {
+  const day = date.getDay()
+  const diff = day === 0 ? 6 : day - 1 // week starts Monday
+  return startOfDay(new Date(date.getFullYear(), date.getMonth(), date.getDate() - diff))
+}
+
+const DATE_FILTERS = [
+  { key: 'today', label: 'Today' },
+  { key: 'yesterday', label: 'Yesterday' },
+  { key: 'thisWeek', label: 'This Week' },
+  { key: 'lastWeek', label: 'Previous Week' },
+  { key: 'thisMonth', label: 'This Month' },
+  { key: 'lastMonth', label: 'Previous Month' },
+  { key: 'thisYear', label: 'This Year' },
+  { key: 'all', label: 'All Time' },
+  { key: 'custom', label: 'Custom Range' },
+]
+
+// Returns inclusive [start, end] ms bounds for a preset, or null bounds for
+// an unbounded range. All calculations use local time.
+const getDateRangeBounds = (filterKey, customStart, customEnd) => {
+  const now = new Date()
+  switch (filterKey) {
+    case 'today': {
+      const start = startOfDay(now)
+      return [start, start + DAY_MS - 1]
+    }
+    case 'yesterday': {
+      const start = startOfDay(now) - DAY_MS
+      return [start, start + DAY_MS - 1]
+    }
+    case 'thisWeek': {
+      const start = startOfWeek(now)
+      return [start, start + 7 * DAY_MS - 1]
+    }
+    case 'lastWeek': {
+      const start = startOfWeek(now) - 7 * DAY_MS
+      return [start, start + 7 * DAY_MS - 1]
+    }
+    case 'thisMonth': {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime()
+      return [start, end - 1]
+    }
+    case 'lastMonth': {
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime()
+      const end = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
+      return [start, end - 1]
+    }
+    case 'thisYear': {
+      const start = new Date(now.getFullYear(), 0, 1).getTime()
+      const end = new Date(now.getFullYear() + 1, 0, 1).getTime()
+      return [start, end - 1]
+    }
+    case 'custom': {
+      const start = customStart ? startOfDay(new Date(customStart + 'T00:00:00')) : null
+      const end = customEnd ? startOfDay(new Date(customEnd + 'T00:00:00')) + DAY_MS - 1 : null
+      return [start, end]
+    }
+    case 'all':
+    default:
+      return [null, null]
+  }
+}
+
 const ManualInvoiceHistory = ({token}) => {
   const [invoices,setInvoices] = useState([])
   const [loading,setLoading] = useState(true)
@@ -33,6 +101,9 @@ const ManualInvoiceHistory = ({token}) => {
   const [deleting,setDeleting] = useState(false)
   const [busyId,setBusyId] = useState(null)
   const [editingInvoice,setEditingInvoice] = useState(null)
+  const [dateFilter,setDateFilter] = useState('all')
+  const [customStart,setCustomStart] = useState('')
+  const [customEnd,setCustomEnd] = useState('')
 
   const fetchInvoices = async () => {
     setLoading(true)
@@ -55,7 +126,27 @@ const ManualInvoiceHistory = ({token}) => {
     fetchInvoices()
   },[token])
 
-  const filtered = invoices.filter((inv) => {
+  const [rangeStart, rangeEnd] = getDateRangeBounds(dateFilter, customStart, customEnd)
+
+  const dateFiltered = invoices.filter((inv) => {
+    const ts = Number(inv.date)
+    if (!Number.isFinite(ts)) return false
+    if (rangeStart !== null && ts < rangeStart) return false
+    if (rangeEnd !== null && ts > rangeEnd) return false
+    return true
+  })
+
+  // Summary uses saved manual invoice data only (this endpoint returns
+  // nothing but manual invoices). Advance payments are a portion of each
+  // invoice's grand total, so they are never added on top of revenue.
+  const summary = dateFiltered.reduce((acc, inv) => {
+    acc.revenue += Number(inv.grandTotal) || 0
+    acc.shipping += Number(inv.shippingCharges) || 0
+    acc.advance += Number(inv.advancePayment) || 0
+    return acc
+  }, { revenue: 0, shipping: 0, advance: 0 })
+
+  const filtered = dateFiltered.filter((inv) => {
     const q = search.trim().toLowerCase()
     if (!q) return true
     return (
@@ -164,6 +255,52 @@ const ManualInvoiceHistory = ({token}) => {
           <button onClick={fetchInvoices} className='px-3 py-2 text-sm border border-slate-300 rounded-lg text-gray-600 hover:border-primary hover:text-primary transition-colors shrink-0'>Refresh</button>
         </div>
       </div>
+      <div className='flex flex-wrap gap-2 mb-4'>
+        {DATE_FILTERS.map((filter) => (
+          <button
+            key={filter.key}
+            onClick={() => setDateFilter(filter.key)}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${dateFilter === filter.key ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-slate-300 hover:border-primary hover:text-primary'}`}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+      {dateFilter === 'custom' && (
+        <div className='flex flex-wrap items-end gap-3 mb-4 p-3 border border-slate-200 rounded-lg bg-gray-50'>
+          <div>
+            <p className='text-xs font-semibold text-gray-600 mb-1'>From</p>
+            <input type="date" value={customStart} onChange={(e)=>setCustomStart(e.target.value)} className='px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary text-sm bg-white' />
+          </div>
+          <div>
+            <p className='text-xs font-semibold text-gray-600 mb-1'>To</p>
+            <input type="date" value={customEnd} onChange={(e)=>setCustomEnd(e.target.value)} className='px-3 py-2 border border-slate-300 rounded-lg outline-none focus:border-primary text-sm bg-white' />
+          </div>
+          {(customStart || customEnd) && (
+            <button onClick={() => { setCustomStart(''); setCustomEnd(''); }} className='px-3 py-2 text-xs font-semibold text-gray-500 hover:text-primary transition-colors'>Clear Dates</button>
+          )}
+        </div>
+      )}
+
+      <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4'>
+        <div className='border border-slate-200 rounded-xl bg-white p-4'>
+          <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>Total Revenue</p>
+          <p className='text-lg font-bold text-primary mt-1'>{currency} {summary.revenue.toLocaleString()}</p>
+        </div>
+        <div className='border border-slate-200 rounded-xl bg-white p-4'>
+          <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>Total Manual Invoices</p>
+          <p className='text-lg font-bold text-gray-800 mt-1'>{dateFiltered.length}</p>
+        </div>
+        <div className='border border-slate-200 rounded-xl bg-white p-4'>
+          <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>Shipping Charges</p>
+          <p className='text-lg font-bold text-gray-800 mt-1'>{currency} {summary.shipping.toLocaleString()}</p>
+        </div>
+        <div className='border border-slate-200 rounded-xl bg-white p-4'>
+          <p className='text-xs font-semibold text-gray-500 uppercase tracking-wide'>Advance Payments</p>
+          <p className='text-lg font-bold text-gray-800 mt-1'>{currency} {summary.advance.toLocaleString()}</p>
+        </div>
+      </div>
+
       <p className='text-sm text-gray-500 mb-3'>{filtered.length} invoice{filtered.length !== 1 ? 's' : ''} found</p>
 
       {loading ? (
